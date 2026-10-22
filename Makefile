@@ -1,40 +1,62 @@
-# Reel RPG - GBA homebrew prototype
+# Reel RPG - standard devkitPro GBA project layout
+.SUFFIXES:
+
 ifeq ($(strip $(DEVKITPRO)),)
-$(error DEVKITPRO is not set. Install devkitPro and set DEVKITPRO.)
+$(error DEVKITPRO is not set)
 endif
 ifeq ($(strip $(DEVKITARM)),)
-$(error DEVKITARM is not set. Set DEVKITARM to $(DEVKITPRO)/devkitARM.)
+$(error DEVKITARM is not set)
 endif
+
 include $(DEVKITARM)/gba_rules
 
 TARGET := reel-rpg
 BUILD := build
 SOURCES := src
-CFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
-OFILES := $(CFILES:.c=.o)
-CFLAGS := -g -Wall -Wextra -O2 -mcpu=arm7tdmi -mtune=arm7tdmi -mthumb-interwork -I$(DEVKITPRO)/libgba/include
-LDFLAGS := -g $(ARCH)
-LIBS := -L$(DEVKITPRO)/libgba/lib -lgba
+LIBDIRS := $(LIBGBA)
+GAME_TITLE := REEL RPG
+GAME_CODE := RERP
+MAKER_CODE := 01
+ARCH := -mthumb -mthumb-interwork -mcpu=arm7tdmi
+CFLAGS := -g -O2 -Wall -Wextra $(ARCH)
+LIBS := -lgba
+
+ifneq ($(BUILD),$(notdir $(CURDIR)))
+
 export OUTPUT := $(CURDIR)/$(TARGET)
 export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
 export DEPSDIR := $(CURDIR)/$(BUILD)
+export PATH := $(DEVKITARM)/bin:$(PATH)
+
+CFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+export OFILES := $(CFILES:.c=.o)
+export INCLUDE := $(foreach dir,$(LIBDIRS),-I$(dir)/include) -I$(CURDIR)/$(BUILD)
+export LIBPATHS := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+export LIBS
+export CFLAGS
+export ARCH
+export GAME_TITLE
+export GAME_CODE
+export MAKER_CODE
 
 .PHONY: all clean
 all: $(BUILD) $(OUTPUT).gba
 
 $(BUILD):
 	@mkdir -p $@
-
-$(OUTPUT).gba: $(OFILES)
-	$(CC) $(LDFLAGS) $(OFILES) $(LIBS) -o $(OUTPUT).elf
-	$(OBJCOPY) -O binary $(OUTPUT).elf $(OUTPUT).gba
-	@$(NM) -CSn $(OUTPUT).elf > $(OUTPUT).map
-	@echo Built $(OUTPUT).gba
-
-%.o: %.c
-	$(CC) $(CFLAGS) -MMD -MP -MF $(DEPSDIR)/$*.d -c $< -o $@
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
 
 clean:
-	@rm -rf $(BUILD) $(OUTPUT).elf $(OUTPUT).gba $(OUTPUT).map
+	@rm -rf $(BUILD) $(TARGET).elf $(TARGET).gba $(TARGET).map
 
--include $(wildcard $(DEPSDIR)/*.d)
+else
+
+DEPENDS := $(OFILES:.o=.d)
+
+$(OUTPUT).gba: $(OUTPUT).elf
+
+$(OUTPUT).elf: $(OFILES)
+
+-include $(DEPENDS)
+
+endif
