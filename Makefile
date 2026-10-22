@@ -13,7 +13,8 @@ include $(DEVKITARM)/gba_rules
 TARGET := reel-rpg
 BUILD := build
 SOURCES := src
-LIBDIRS := $(LIBGBA)
+# Set the library path explicitly; this container does not export LIBGBA.
+LIBDIRS := $(DEVKITPRO)/libgba
 GAME_TITLE := REEL RPG
 GAME_CODE := RERP
 MAKER_CODE := 01
