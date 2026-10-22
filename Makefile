@@ -13,13 +13,15 @@ include $(DEVKITARM)/gba_rules
 TARGET := reel-rpg
 BUILD := build
 SOURCES := src
-# Set the library path explicitly; this container does not export LIBGBA.
-LIBDIRS := $(DEVKITPRO)/libgba
+LIBDIRS := $(LIBGBA)
 GAME_TITLE := REEL RPG
 GAME_CODE := RERP
 MAKER_CODE := 01
 ARCH := -mthumb -mthumb-interwork -mcpu=arm7tdmi
 CFLAGS := -g -O2 -Wall -Wextra $(ARCH)
+# devkitARM base_rules compiles with CFLAGS/CPPFLAGS; it does not consume INCLUDE by itself.
+# Keep this recursive so the exported INCLUDE from the parent make is expanded in build/.
+CFLAGS += $(INCLUDE)
 LIBS := -lgba
 
 ifneq ($(BUILD),$(notdir $(CURDIR)))
