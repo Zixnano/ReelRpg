@@ -1,25 +1,36 @@
 # Reel RPG
 
-A tiny fishing RPG prototype for the original Game Boy Advance (240×160). This repository has a GitHub Actions workflow intended to compile a real .gba ROM with devkitARM and libgba.
+Reel RPG is a cozy, pixel-art fishing adventure for the Game Boy Advance, built for a 240×160 screen. The look aims for the dense, colorful handheld RPG style in the supplied reference: tiled paths, flowerbeds, trees, a market street, wooden pier, and a small character moving through the world.
 
-## Get the ROM
+## Build and download
 
-1. Open the Actions tab in this repository.
-2. Select Build Reel RPG GBA ROM and open the newest run.
-3. Under Artifacts, download ReelRPG-GBA. The ZIP contains reel-rpg.gba and a short readme.
+Every push to `main` runs the devkitARM/libgba build workflow. Open the [Actions builds](https://github.com/Zixnano/ReelRpg/actions) and download the `ReelRPG-GBA` artifact from the newest successful run. It contains the `.gba` ROM and a short readme.
 
-Every push to main runs the build. You can also start a build manually from Actions using Run workflow.
+## Controls
 
-## Run it
+- **D-pad:** move around the village and navigate menus
+- **A:** interact, cast, reel, buy, cook, or battle
+- **B:** back out, calm the line, or leave an encounter
+- **Start:** open the travel bag
+- **Select:** open the island guide and journal
+- **L / R:** quick island travel / explore
 
-Open reel-rpg.gba in an emulator such as mGBA, or use compatible GBA hardware/flashcart. Controls: D-pad to choose and move, A to confirm/cast/reel, B to cancel/release, Start to open the bag/menu, Select to open the same menu.
+## Current playable systems
 
-## Current prototype scope
+- Four selectable anglers: otter, cat, fox, and capybara
+- A hand-drawn top-down village with tiled plaza, shops, paths, trees, flowers, canal, and a wooden fishing pier
+- Fishing bite timing, tension management, catch/escape outcomes, multiple fish species, rarity-flavored colors, and fish collection tracking
+- Coins, bait, rods, experience, levels, and fish values
+- Travel bag, fish journal, selling catches, bait/rod shop, cooking, pet companionship and bond
+- Island exploration, changing destinations, and simple wild encounters
+- Basic SRAM save writing
 
-This is an early playable foundation, not the complete game concept. It includes a title screen, animal selection (otter, cat, fox, capybara), a small pier scene, a bite-and-reel fishing loop, a simple bag/save screen, and rudimentary SRAM writing. Art is generated from chunky pixel primitives; it is not yet a polished tile/sprite game. Battle systems, pets and skills, cooking, island travel, tiered fish progression, audio, and full save validation remain future work.
+## Important limitations
 
-## Local build
+This is an expanded playable foundation, not a finished commercial-scale RPG. The visuals are drawn in software to keep this build self-contained, rather than using a full authored tile/sprite asset pipeline. The current island, pet, battle, cooking, and save systems are deliberately lightweight; they need more content, balancing, sound/music, and thorough emulator testing. The save routine writes a small marker and selected values to SRAM but does not yet implement robust versioning, checksum validation, or a complete restore/load flow.
 
-Install devkitPro with the GBA development packages (gba-dev), then run make in a shell where DEVKITPRO is configured. The output is reel-rpg.gba.
+## Build locally
 
-A ROM is only considered built once GitHub Actions succeeds and uploads the artifact. A successful compile does not by itself prove that every gameplay path has been tested in an emulator.
+Install devkitPro with the GBA development packages (`gba-dev`) and run `make` in a shell where `DEVKITPRO` and `DEVKITARM` are configured. Output: `reel-rpg.gba`.
+
+A successful CI build confirms the ROM was compiled and packaged; it does not guarantee that every gameplay path has been manually tested in mGBA or on hardware.
