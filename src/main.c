@@ -176,7 +176,7 @@ int main(void){
   else if(scene==5){
    bag();if(hit(KEY_UP))bagCursor=(bagCursor+5)%6;if(hit(KEY_DOWN))bagCursor=(bagCursor+1)%6;
    if(hit(KEY_B))scene=2;
-   if(hit(KEY_A)){if(bagCursor==0){scene=9;bagCursor=0;}else if(bagCursor==1){scene=6;menuCursor=1;}else if(bagCursor==2){scene=7;}else if(bagCursor==3){if(catches>0){coins+=catches*2;catches=0;for(int i=0;i<8;i++)fishTotal[i]=0;setToast(1);}else setToast(4);}else if(bagCursor==4){saveGame();scene=2;}else scene=2;}
+   if(hit(KEY_A)){if(bagCursor==0){scene=9;bagCursor=0;}else if(bagCursor==1){scene=6;menuCursor=0;}else if(bagCursor==2){scene=7;menuCursor=0;}else if(bagCursor==3){if(catches>0){coins+=catches*2;catches=0;for(int i=0;i<8;i++)fishTotal[i]=0;setToast(1);}else setToast(4);}else if(bagCursor==4){saveGame();scene=2;}else scene=2;}
   }
   else if(scene==6){
    shopScreen();if(hit(KEY_UP))menuCursor=(menuCursor+3)%4;if(hit(KEY_DOWN))menuCursor=(menuCursor+1)%4;if(hit(KEY_B))scene=2;
