@@ -20,7 +20,6 @@ MAKER_CODE := 01
 ARCH := -mthumb -mthumb-interwork -mcpu=arm7tdmi
 CFLAGS := -g -O2 -Wall -Wextra $(ARCH)
 # devkitARM base_rules compiles with CFLAGS/CPPFLAGS; it does not consume INCLUDE by itself.
-# Keep this recursive so the exported INCLUDE from the parent make is expanded in build/.
 CFLAGS += $(INCLUDE)
 LIBS := -lgba
 
@@ -30,6 +29,8 @@ export OUTPUT := $(CURDIR)/$(TARGET)
 export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
 export DEPSDIR := $(CURDIR)/$(BUILD)
 export PATH := $(DEVKITARM)/bin:$(PATH)
+# This is a C-only project. Link with the GCC driver so -specs=gba.specs is accepted.
+export LD := $(CC)
 
 CFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 export OFILES := $(CFILES:.c=.o)
