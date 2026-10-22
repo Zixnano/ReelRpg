@@ -2,16 +2,19 @@
 ifeq ($(strip $(DEVKITPRO)),)
 $(error DEVKITPRO is not set. Install devkitPro and set DEVKITPRO.)
 endif
-include $(DEVKITPRO)/libgba/gba_rules
+ifeq ($(strip $(DEVKITARM)),)
+$(error DEVKITARM is not set. Set DEVKITARM to $(DEVKITPRO)/devkitARM.)
+endif
+include $(DEVKITARM)/gba_rules
 
 TARGET := reel-rpg
 BUILD := build
 SOURCES := src
 CFILES := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
 OFILES := $(CFILES:.c=.o)
-CFLAGS := -g -Wall -Wextra -O2 -mcpu=arm7tdmi -mtune=arm7tdmi -mthumb-interwork
+CFLAGS := -g -Wall -Wextra -O2 -mcpu=arm7tdmi -mtune=arm7tdmi -mthumb-interwork -I$(DEVKITPRO)/libgba/include
 LDFLAGS := -g $(ARCH)
-LIBS := -lgba
+LIBS := -L$(DEVKITPRO)/libgba/lib -lgba
 export OUTPUT := $(CURDIR)/$(TARGET)
 export VPATH := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir))
 export DEPSDIR := $(CURDIR)/$(BUILD)
