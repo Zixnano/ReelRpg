@@ -1,0 +1,47 @@
+name: Build Reel RPG GBA ROM
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: devkitpro/devkitarm:latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Install GBA development libraries
+        shell: bash
+        run: |
+          set -euxo pipefail
+          if ! test -f "${DEVKITPRO:-/opt/devkitpro}/libgba/gba_rules"; then
+            dkp-pacman -Sy --noconfirm gba-dev
+          fi
+          echo "DEVKITPRO=${DEVKITPRO:-/opt/devkitpro}" >> "$GITHUB_ENV"
+      - name: Build ROM
+        shell: bash
+        run: |
+          set -euxo pipefail
+          make clean
+          make
+          test -s reel-rpg.gba
+          mkdir -p dist
+          cp reel-rpg.gba dist/
+          cp README.md dist/README.txt
+          cd dist
+          zip -9 ReelRPG-GBA.zip reel-rpg.gba README.txt
+      - name: Upload ROM and ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReelRPG-GBA
+          path: |
+            reel-rpg.gba
+            dist/ReelRPG-GBA.zip
+          if-no-files-found: error
+          retention-days: 30
