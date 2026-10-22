@@ -15,6 +15,10 @@ Every push to `main` runs the devkitARM/libgba build workflow. Open the [Actions
 - **Select:** open the island guide and journal
 - **L / R:** quick island travel / explore
 
+## Build status
+
+The expanded source includes the grass-palette compile fix. Use the artifact from the newest successful Actions run, not an older failed run.
+
 ## Current playable systems
 
 - Four selectable anglers: otter, cat, fox, and capybara
