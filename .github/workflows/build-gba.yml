@@ -12,18 +12,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     container:
-      image: devkitpro/devkitarm:latest
+      image: devkitpro/devkitarm:20260610
+    env:
+      DEVKITPRO: /opt/devkitpro
+      DEVKITARM: /opt/devkitpro/devkitARM
     steps:
       - name: Check out source
         uses: actions/checkout@v4
-      - name: Install GBA development libraries
+      - name: Verify toolchain and libgba
         shell: bash
         run: |
           set -euxo pipefail
-          if ! test -f "${DEVKITPRO:-/opt/devkitpro}/libgba/gba_rules"; then
-            dkp-pacman -Sy --noconfirm gba-dev
-          fi
-          echo "DEVKITPRO=${DEVKITPRO:-/opt/devkitpro}" >> "$GITHUB_ENV"
+          test -x "$DEVKITARM/bin/arm-none-eabi-gcc"
+          test -f "$DEVKITARM/gba_rules"
+          test -f "$DEVKITPRO/libgba/include/gba.h"
+          command -v zip
       - name: Build ROM
         shell: bash
         run: |
