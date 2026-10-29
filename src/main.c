@@ -13,24 +13,24 @@
 #define PAPER C(26,25,20)
 #define WHITE C(31,31,28)
 #define PALE C(27,29,23)
-#define GRASS C(13,23,12)
-#define GRASS2 C(17,27,14)
-#define GRASS3 C(20,29,16)
-#define LEAF C(10,22,12)
-#define LEAF2 C(15,27,13)
-#define LEAF3 C(22,29,16)
+#define GRASS C(10,25,11)
+#define GRASS2 C(12,28,16)
+#define GRASS3 C(18,30,19)
+#define LEAF C(7,23,12)
+#define LEAF2 C(12,28,15)
+#define LEAF3 C(20,31,19)
 #define TRUNK C(17,11,5)
-#define PATH C(25,22,18)
-#define PATH2 C(29,27,22)
-#define TILE C(23,20,27)
-#define TILE2 C(27,24,30)
+#define PATH C(27,23,14)
+#define PATH2 C(31,29,23)
+#define TILE C(23,22,27)
+#define TILE2 C(29,27,31)
 #define TILE3 C(19,17,24)
-#define WATER C(7,17,24)
-#define WATER2 C(9,21,27)
-#define WATER3 C(13,25,29)
-#define ROOF C(26,8,13)
-#define ROOF2 C(31,13,17)
-#define WOOD C(20,11,6)
+#define WATER C(5,15,28)
+#define WATER2 C(7,22,30)
+#define WATER3 C(13,29,31)
+#define ROOF C(26,7,11)
+#define ROOF2 C(31,15,18)
+#define WOOD C(22,12,6)
 #define GOLD C(31,23,9)
 #define ORANGE C(31,12,5)
 #define PINK C(31,17,20)
@@ -134,17 +134,91 @@ static void petScreen(void){clear(GRASS);header("YOUR COMPANION");panel(15,25,21
 static void shopScreen(void){clear(TILE);header("TIDEPOOL MARKET");panel(12,25,216,116);txt(25,37,"BAIT PACK   5 COINS",INK,1);txt(25,56,"WOODEN ROD 18 COINS",INK,1);txt(25,75,"PET SNACK    8 COINS",INK,1);txt(25,94,"COOKED FISH  3 FISH",INK,1);txt(25,117,"A BUY  UP DOWN",INK,1);if(menuCursor==0)rect(19,34,201,13,GOLD);else if(menuCursor==1)rect(19,53,201,13,GOLD);else if(menuCursor==2)rect(19,72,201,13,GOLD);else rect(19,91,201,13,GOLD);txt(14,151,"B EXIT",WHITE,1);}
 static void cookScreen(void){clear(C(18,24,15));header("CAMPFIRE COOKING");rect(80,54,80,47,WOOD);ellipse(120,75,27,18,ORANGE);ellipse(120,73,18,12,GOLD);ellipse(120,72,9,7,WHITE);fishDraw(111,56,MINT,8);panel(15,24,210,25);txt(25,33,"COOK 3 FISH INTO A MEAL",INK,1);panel(26,112,188,29);txt(42,122,"A COOK   B BACK",INK,1);}
 static void islandScreen(void){clear(C(9,21,25));waterScene();ellipse(120,86,82,46,GRASS2);ellipse(120,82,73,42,GRASS);tree(85,64,16);tree(151,72,19);tree(119,49,16);house(100,79);rect(112,103,16,20,PATH2);hero(117,108);panel(27,22,186,20);txt(38,29,"NEW ISLAND DISCOVERED",INK,1);panel(30,132,180,19);txt(42,139,"A EXPLORE  B RETURN",INK,1);}
-static void battleScreen(void){clear(C(19,25,17));header("WILD ENCOUNTER");rect(0,22,240,62,C(20,26,18));ellipse(175,61,24,17,C(9,16,9));ellipse(170,54,16,14,C(13,21,12));dot(164,52,WHITE);rect(0,85,240,75,C(13,21,12));hero(45,103);ellipse(173,111,18,12,ORANGE);ellipse(169,105,12,10,C(31,20,8));panel(10,24,111,31);txt(17,31,"WILD SLIME",INK,1);txt(17,43,"HP",INK,1);rect(40,43,68,5,INK);rect(42,44,battleHp*64/30,3,MINT);panel(122,112,108,35);txt(130,120,"A SPLASH",INK,1);txt(130,132,"B RUN",INK,1);txt(14,145,"YOUR HP",WHITE,1);rect(65,143,95,6,INK);rect(67,145,heroHp*91/30,2,PINK);}
-static void menuScreen(void){clear(GRASS);header("ISLAND GUIDE");panel(14,25,212,119);const char*o[]={"VISIT TIDEPOOL MARKET","CAMPFIRE COOKING","TRAVEL TO ISLAND","WILD PET BATTLE","FISHING JOURNAL","RETURN TO VILLAGE"};for(int i=0;i<6;i++){int y=34+i*17;if(menuCursor==i)rect(20,y-2,200,14,GOLD);txt(26,y+2,o[i],INK,1);}txt(13,151,"UP DOWN A SELECT B BACK",WHITE,1);}
-static void saveGame(void){volatile u8 *s=(volatile u8*)0x0E000000;s[0]='R';s[1]='E';s[2]='E';s[3]='L';s[4]=1;s[5]=(u8)animal;s[6]=(u8)coins;s[7]=(u8)level;s[8]=(u8)xp;s[9]=(u8)catches;s[10]=(u8)bait;s[11]=(u8)island;s[12]=(u8)hasPet;s[13]=(u8)petBond;for(int i=0;i<8;i++)s[14+i]=(u8)fishTotal[i];s[22]=0xA5;saved=true;setToast(7);}
-static void catchFish(void){caught[fishKind]=1;fishTotal[fishKind]++;catches++;coins+=fishPrices[fishKind]/2;xp+=fishXP[fishKind];if(fishKind<3)fishCount++;if(xp>=level*10){xp-=level*10;level++;stamina=100;setToast(3);}else setToast(1);if(hasPet&&petBond<100)petBond+=2;}
-static void interact(void){
- if(island>0){scene=8;return;}
- if(px<76&&py>90){scene=3;hooked=0;waitTicks=0;if(bait<=0)setToast(4);return;}
- if(py<52&&px>100&&px<170){scene=6;menuCursor=0;return;}
- if(py<52&&px>=170){scene=6;menuCursor=0;return;}
- if(py>75&&px>108){scene=7;menuCursor=0;return;}
- scene=10;menuCursor=0;
+static void battleScreen(void){
+ /* The boat is the arena: ocean behind, deck below, railing between angler and enemy. */
+ clear(C(5,15,28));
+ rect(0,18,240,82,C(5,15,28));
+ for(int y=24;y<101;y+=13){
+   int offset=(y/13%2)*9;
+   for(int x=offset;x<240;x+=31){
+     line(x,y,x+8,y,C(9,22,31));
+     line(x+17,y+5,x+26,y+5,C(7,19,30));
+     dot(x+12,y+2,C(19,29,31));
+   }
+ }
+ /* Distant island silhouette and sky haze. */
+ rect(0,18,240,9,C(13,24,31));
+ for(int i=0;i<9;i++){
+   int x=145+i*12;
+   line(x,48-(i%3)*4,x+9,34+(i%2)*3,C(8,23,25));
+   line(x+9,34+(i%2)*3,x+18,48-(i%3)*4,C(10,25,24));
+ }
+ /* Deck boards. */
+ rect(0,91,240,29,C(22,12,6));
+ for(int y=96;y<120;y+=6){
+   line(0,y,239,y,C(29,18,9));
+   for(int x=(y%2)*11;x<240;x+=32) dot(x,y+2,C(12,8,5));
+ }
+ /* The curved wooden gunwale is the centrepiece of the battle staging. */
+ line(0,83,239,92,C(10,7,5));
+ line(0,80,239,89,C(31,20,9));
+ line(0,77,239,86,C(25,14,7));
+ for(int x=8;x<240;x+=28){
+   rect(x,78+(x*9/239),4,13,C(12,9,7));
+   dot(x+1,81+(x*9/239),C(31,27,18));
+   dot(x+1,85+(x*9/239),C(31,27,18));
+ }
+ /* Huge marlin climbing over the outside of the boat. Hard-edged shapes only. */
+ ellipse(177,57,25,31,C(4,10,22));
+ ellipse(172,57,20,28,C(7,17,29));
+ ellipse(166,58,15,23,C(17,24,29));
+ /* pale belly and cheek plates */
+ ellipse(158,65,10,18,C(27,27,23));
+ rect(155,57,17,18,C(27,27,23));
+ /* dorsal fin, tail, and pectoral fin */
+ line(164,35,179,19,C(7,13,25)); line(179,19,191,43,C(7,13,25));
+ line(164,35,179,23,C(17,23,30)); line(179,23,187,42,C(17,23,30));
+ line(193,55,210,43,C(7,13,25)); line(210,43,207,61,C(7,13,25)); line(207,61,193,64,C(7,13,25));
+ line(164,69,184,83,C(7,13,25)); line(184,83,174,72,C(17,23,30));
+ /* long swordfish bill angled over the rail */
+ line(151,50,129,25,C(3,7,13)); line(150,49,130,26,C(31,30,24));
+ line(149,50,132,31,C(20,22,20));
+ /* jaw and toothy open mouth */
+ line(148,55,132,70,C(3,7,13)); line(132,70,158,69,C(3,7,13));
+ line(148,57,137,66,C(31,30,24)); line(137,66,155,65,C(31,30,24));
+ for(int i=0;i<5;i++) dot(139+i*3,65-(i%2),C(31,31,27));
+ /* bandana, eye, and angry brow */
+ rect(153,34,35,6,C(24,5,10)); rect(157,35,7,4,C(31,19,17));
+ dot(161,36,C(31,29,22)); dot(164,36,C(31,29,22));
+ rect(159,48,7,3,C(3,5,8)); dot(161,49,C(31,22,7));
+ line(157,45,167,46,C(3,5,8));
+ /* splash pixels around the fish as it hauls itself aboard */
+ for(int i=0;i<15;i++){
+   int x=133+(i*17)%91, y=77+(i*7)%18;
+   dot(x,y,(i%3)==0?C(25,31,31):C(12,26,31));
+   if(i%4==0) dot(x+1,y-1,C(25,31,31));
+ }
+ /* Angler stands on deck, facing the monster. */
+ hero(35,88);
+ /* Enemy status card */
+ panel(5,21,132,29);
+ txt(12,27,"GULPERJACK",INK,1);
+ txt(12,39,"LV 08",INK,1);
+ txt(54,39,"HP",ORANGE,1);
+ rect(69,39,60,5,INK); rect(71,40,battleHp*56/30,3,MINT);
+ /* Command box uses the classic four-choice RPG layout. */
+ panel(5,121,112,35);
+ txt(12,128,"WHAT WILL",INK,1);
+ txt(12,139,"ANGLER DO?",INK,1);
+ const char *opts[4]={"FIGHT","PETS","BAG","RUN"};
+ for(int i=0;i<4;i++){
+   int x=(i%2)?177:120, y=(i/2)?140:124;
+   u16 fill=i==0?PINK:i==1?C(24,16,6):i==2?C(8,20,10):C(7,16,25);
+   rect(x,y,57,14,INK); rect(x+1,y+1,55,12,fill);
+   line(x+2,y+1,x+53,y+1,C(31,31,27));
+   txt(x+6,y+5,opts[i],WHITE,1);
+   if(i==menuCursor){rect(x-2,y+4,2,5,GOLD);}
+ }
 }
 int main(void){
  REG_DISPCNT=MODE_3|BG2_ENABLE;
