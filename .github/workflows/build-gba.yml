@@ -2,7 +2,7 @@ name: Build Reel RPG GBA ROM
 
 on:
   push:
-    branches: [main]
+    branches: [main, visual-overhaul/boat-battle]
   workflow_dispatch:
 
 permissions:
