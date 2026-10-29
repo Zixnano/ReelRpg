@@ -263,14 +263,37 @@ int main(void){
   else if(scene==8){islandScreen();if(hit(KEY_A)){island=(island+1)%3;day++;px=120;py=108;scene=2;setToast(1);}if(hit(KEY_B))scene=2;}
   else if(scene==9){
    if(menuCursor==0){journal();if(hit(KEY_LEFT))bagCursor=(bagCursor+4)%8;if(hit(KEY_RIGHT))bagCursor=(bagCursor+4)%8;if(hit(KEY_B)||hit(KEY_START))scene=2;}
-   else{menuScreen();if(hit(KEY_UP))menuCursor=(menuCursor+5)%6;if(hit(KEY_DOWN))menuCursor=(menuCursor+1)%6;if(hit(KEY_B))scene=2;if(hit(KEY_A)){if(menuCursor==0){scene=6;menuCursor=0;}else if(menuCursor==1){scene=7;menuCursor=0;}else if(menuCursor==2){scene=8;}else if(menuCursor==3){scene=12;battleHp=30;heroHp=30;}else if(menuCursor==4){scene=9;menuCursor=0;}else scene=2;}}
+   else{menuScreen();if(hit(KEY_UP))menuCursor=(menuCursor+5)%6;if(hit(KEY_DOWN))menuCursor=(menuCursor+1)%6;if(hit(KEY_B))scene=2;if(hit(KEY_A)){if(menuCursor==0){scene=6;menuCursor=0;}else if(menuCursor==1){scene=7;menuCursor=0;}else if(menuCursor==2){scene=8;}else if(menuCursor==3){scene=12;menuCursor=0;battleHp=30;heroHp=30;}else if(menuCursor==4){scene=9;menuCursor=0;}else scene=2;}}
   }
   else if(scene==10){clear(GRASS);header("VILLAGE NOTICE");panel(13,27,214,103);txt(25,38,"WELCOME TO BRINEBELL",INK,1);txt(25,53,"CAST BY THE WATER",INK,1);txt(25,66,"SELL FISH FOR COINS",INK,1);txt(25,79,"BUY BAIT AT THE SHOP",INK,1);txt(25,92,"FIND A PET COMPANION",INK,1);txt(25,105,"EXPLORE THE ISLANDS",INK,1);txt(16,147,"A OR B TO RETURN",WHITE,1);if(hit(KEY_A)||hit(KEY_B))scene=2;}
   else if(scene==11){petScreen();if(hit(KEY_A)){if(catches>0){catches--;hasPet=true;petBond+=8;setToast(5);}else hasPet=!hasPet;}if(hit(KEY_B)||hit(KEY_START))scene=2;}
   else if(scene==12){
    battleScreen();
-   if(hit(KEY_A)){battleHp-=8+(petBond/25);if(battleHp<=0){coins+=8;xp+=6;if(xp>=level*10){xp-=level*10;level++;setToast(3);}else setToast(1);scene=2;}else{heroHp-=4;if(heroHp<=0){heroHp=30;coins=coins>5?coins-5:0;scene=2;setToast(2);}}}
+   if(hit(KEY_LEFT)||hit(KEY_RIGHT))menuCursor=(menuCursor+1)%4;
+   if(hit(KEY_UP)||hit(KEY_DOWN))menuCursor=(menuCursor+2)%4;
    if(hit(KEY_B)){scene=2;}
+   if(hit(KEY_A)){
+    if(menuCursor==3){scene=2;setToast(2);}
+    else if(menuCursor==2){
+      if(catches>0){catches--;heroHp+=10;if(heroHp>30)heroHp=30;setToast(6);}
+      else setToast(4);
+    }
+    else if(menuCursor==1){
+      if(hasPet){battleHp-=5+(petBond/20);petBond+=1;setToast(5);}
+      else setToast(4);
+    }
+    else{
+      battleHp-=8+(petBond/25);
+      if(battleHp<=0){
+        coins+=8;xp+=6;
+        if(xp>=level*10){xp-=level*10;level++;setToast(3);}else setToast(1);
+        scene=2;
+      }else{
+        heroHp-=4;
+        if(heroHp<=0){heroHp=30;coins=coins>5?coins-5:0;scene=2;setToast(2);}
+      }
+    }
+   }
   }
   if(hit(KEY_L)&&scene==2){island=(island+1)%3;day++;setToast(1);}
   if(hit(KEY_R)&&scene==2){scene=8;}
