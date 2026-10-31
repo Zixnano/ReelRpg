@@ -43,7 +43,7 @@ jobs:
           set -euxo pipefail
           mkdir -p android-project build "$HOME/.config/godot"
           python3 <<'PY'
-          import os, zipfile
+          import os, zipfile, zlib
           from pathlib import Path
 
           archive = Path("android-project.zip")
@@ -60,7 +60,7 @@ jobs:
                       raise SystemExit(f"Unsafe archive path: {name}")
                   try:
                       data = zf.read(info)
-                  except (zipfile.BadZipFile, EOFError, RuntimeError) as exc:
+                  except (zipfile.BadZipFile, EOFError, RuntimeError, zlib.error) as exc:
                       damaged.append((name, str(exc)))
                       continue
                   target.parent.mkdir(parents=True, exist_ok=True)
