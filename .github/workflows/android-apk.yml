@@ -13,6 +13,7 @@ permissions:
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout Reel RPG
         uses: actions/checkout@v4
@@ -36,12 +37,85 @@ jobs:
           use-dotnet: false
           include-templates: true
 
-      - name: Unpack Godot project and configure Android export
+      - name: Recover and configure Godot project
         shell: bash
         run: |
           set -euxo pipefail
           mkdir -p android-project build "$HOME/.config/godot"
-          unzip -o android-project.zip -d android-project
+          python3 <<'PY'
+          import os, zipfile
+          from pathlib import Path
+
+          archive = Path("android-project.zip")
+          destination = Path("android-project")
+          destination.mkdir(exist_ok=True)
+          recovered = []
+          damaged = []
+
+          with zipfile.ZipFile(archive) as zf:
+              for info in zf.infolist():
+                  name = info.filename
+                  target = (destination / name).resolve()
+                  if not str(target).startswith(str(destination.resolve()) + os.sep):
+                      raise SystemExit(f"Unsafe archive path: {name}")
+                  try:
+                      data = zf.read(info)
+                  except (zipfile.BadZipFile, EOFError, RuntimeError) as exc:
+                      damaged.append((name, str(exc)))
+                      continue
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(data)
+                  recovered.append(name)
+
+          print("Recovered archive entries:", *recovered, sep="\\n  ")
+          print("Damaged archive entries:", damaged)
+
+          required = [
+              "project.godot",
+              "scripts/GameManager.gd",
+              "scripts/Player.gd",
+              "scripts/FishingManager.gd",
+              "scripts/BattleManager.gd",
+              "scripts/UIManager.gd",
+              "scenes/CharacterSelect.tscn",
+              "scenes/Town.tscn",
+              "scenes/Fishing.tscn",
+              "scenes/Battle.tscn",
+          ]
+          missing = [p for p in required if not (destination / p).is_file()]
+          if missing:
+              raise SystemExit("Required project files are missing or damaged: " + ", ".join(missing))
+
+          main_scene = destination / "scenes/Main.tscn"
+          if not main_scene.is_file():
+              print("Rebuilding damaged scenes/Main.tscn from intact CharacterSelect scene.")
+              main_scene.write_text('''[gd_scene load_steps=2 format=3]
+
+          [ext_resource type="PackedScene" path="res://scenes/CharacterSelect.tscn" id="1"]
+
+          [node name="Main" type="Control"]
+          layout_mode = 3
+          anchors_preset = 15
+          anchor_right = 1.0
+          anchor_bottom = 1.0
+          grow_horizontal = 2
+          grow_vertical = 2
+
+          [node name="CharacterSelect" parent="." instance=ExtResource("1")]
+          ''', encoding="utf-8")
+
+          project_file = destination / "project.godot"
+          project_text = project_file.read_text(encoding="utf-8")
+          if "[application]" not in project_text:
+              raise SystemExit("project.godot has no [application] section")
+          import re
+          if re.search(r'^run/main_scene\\s*=', project_text, flags=re.M):
+              project_text = re.sub(r'^run/main_scene\\s*=.*$', 'run/main_scene="res://scenes/Main.tscn"', project_text, flags=re.M)
+          else:
+              project_text = project_text.replace("[application]", '[application]\\nrun/main_scene="res://scenes/Main.tscn"', 1)
+          project_file.write_text(project_text, encoding="utf-8")
+          PY
+
           cat > android-project/export_presets.cfg <<'PRESETS'
           [preset.0]
           name="Android"
@@ -67,24 +141,45 @@ jobs:
           version/name="1.0.0"
           screen/orientation=0
           PRESETS
+
+          mkdir -p "$HOME/.android"
+          if [ ! -f "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
           cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
           [gd_resource type="EditorSettings" format=3]
 
           [resource]
           export/android/android_sdk_path = "$ANDROID_HOME"
           export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$HOME/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
           EOF
 
-      - name: Import project and check GDScript
-        run: godot --headless --editor --path android-project --quit
+      - name: Import project and validate GDScript
+        shell: bash
+        run: |
+          set -euxo pipefail
+          godot --headless --editor --path android-project --quit 2>&1 | tee godot-import.log
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|ERROR:" godot-import.log; then
+            echo "Godot reported project or script errors."
+            exit 1
+          fi
+          godot --headless --path android-project --quit-after 3 2>&1 | tee godot-smoke.log
+          if grep -E "SCRIPT ERROR|Parse Error|Failed to load script|ERROR:" godot-smoke.log; then
+            echo "Godot runtime smoke test reported errors."
+            exit 1
+          fi
 
       - name: Export installable Android APK
         shell: bash
         run: |
           set -euxo pipefail
-          godot --headless --path android-project --export-debug "Android" build/ReelRPG.apk
+          godot --headless --path android-project --export-debug "Android" build/ReelRPG.apk 2>&1 | tee godot-export.log
           test -s build/ReelRPG.apk
           file build/ReelRPG.apk
+          unzip -t build/ReelRPG.apk
 
       - name: Upload installable APK
         uses: actions/upload-artifact@v4
