@@ -1,0 +1,95 @@
+name: Build Reel RPG Android APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'android-project.zip'
+      - '.github/workflows/android-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Reel RPG
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Godot 4 and matching Android export templates
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.4.1
+          use-dotnet: false
+          include-templates: true
+
+      - name: Unpack Godot project and configure Android export
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p android-project build "$HOME/.config/godot"
+          unzip -o android-project.zip -d android-project
+          cat > android-project/export_presets.cfg <<'PRESETS'
+          [preset.0]
+          name="Android"
+          platform="Android"
+          runnable=true
+          advanced_options=false
+          dedicated_server=false
+          custom_features=""
+          export_filter="all_resources"
+          include_filter=""
+          exclude_filter=""
+          export_path="build/ReelRPG.apk"
+
+          [preset.0.options]
+          custom_template/debug=""
+          custom_template/release=""
+          gradle_build/use_gradle_build=false
+          architectures/armeabi-v7a=false
+          architectures/arm64-v8a=true
+          package/unique_name="com.zixnano.reelrpg"
+          package/name="Reel RPG"
+          version/code=1
+          version/name="1.0.0"
+          screen/orientation=0
+          PRESETS
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          EOF
+
+      - name: Import project and check GDScript
+        run: godot --headless --editor --path android-project --quit
+
+      - name: Export installable Android APK
+        shell: bash
+        run: |
+          set -euxo pipefail
+          godot --headless --path android-project --export-debug "Android" build/ReelRPG.apk
+          test -s build/ReelRPG.apk
+          file build/ReelRPG.apk
+
+      - name: Upload installable APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ReelRPG-Android-APK
+          path: build/ReelRPG.apk
+          if-no-files-found: error
+          retention-days: 30
